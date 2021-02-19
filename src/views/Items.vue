@@ -6,7 +6,9 @@
     <button class="circleButton" @click="toggleCreateComponent()">+ {{addNewItemButton}}</button>
     </div>
 
-    <CreateItem :from="from" :fromType="'Folder'"  v-if="showCreateComponent" @reloadCards="loadItems(from)"/>
+    <CreateItem :from="from" :fromType="'Folder'" 
+                :userStorages="userStorages" :userFolders="userFolders" 
+                v-if="showCreateComponent" @reloadCards="loadItems(from)"/>
 
         <div class="message-empty-content" v-if="items.length==0">
             <h3>Нет вещей!</h3>
@@ -71,16 +73,16 @@ export default {
             prop: '',
             value: ''
         }
-        if(this.fromType=='Folder'){
+        if(this.fromType == 'Folder'){
             console.log('loading items from folder', this.from)
             urlProp.prop = 'folderId'
             urlProp.value = this.from.id
         }
-        // else if (this.fromType == 'Storage'){
-        //     console.log('loading items from storage')
-        //     urlProp.prop = 'storageId'
-        //     urlProp.value = this.from.id
-        // }
+        else if (this.fromType == 'Storage'){
+            console.log('loading items from storage', this.from)
+            urlProp.prop = 'storageId'
+            urlProp.value = this.from.id
+        }
         getItems(urlProp).then(items=>{
             console.log(items)
             this.items = items
@@ -101,22 +103,22 @@ export default {
   mounted(){
       this.loadItems()
 
-    if(this.fromType=='Folder'){
+    // if(this.fromType=='Folder'){
       console.log('loading items from folder', this.from)
       //Fetch storages
       getStorages().then(storages=>{
         console.log(storages)
         this.userStorages = storages
       })
-    }
-    else if(this.fromType=='Storage'){
+    // }
+    // else if(this.fromType=='Storage'){
       console.log('loading items from storage', this.from)
       //fetch folder
       getFolders().then(folders=>{
         console.log(folders)
         this.userFolders = folders
       })
-    }
+    // }
 
   },
   computed: {

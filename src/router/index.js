@@ -6,6 +6,7 @@ import Items from '../views/Items.vue'
 import Login from '../views/Login.vue'
 import Registration from '../views/Registration.vue'
 import FoldersCreateUpdate from '../views/FolderCreateUpdate'
+import StorageCreateUpdate from '../views/StorageCreateUpdate'
 import Communities from '../views/Communities'
 import CommunityCreateUpdate from '../views/CommunityCreateUpdate'
 
@@ -37,6 +38,12 @@ const routes =[
         name: 'FoldersCreateUpdate',
         props: true,
         component: FoldersCreateUpdate,
+    },
+    {
+        path: '/StorageCreateUpdate/:storage',
+        name: 'StorageCreateUpdate',
+        props: true,
+        component: StorageCreateUpdate,
     },
     {
         path: '/CommunityCreateUpdate/:community',

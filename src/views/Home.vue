@@ -2,14 +2,17 @@
   <div class="">
     <h1>Home</h1>
     
-    <UserCommunities/> 
+    <UserCommunities @selectedCommunityUpdated="loadPage()"/> 
     <p>{{user}}</p>
     <router-link :to="{ name: 'FoldersCreateUpdate', params: { selectedCommunity: user.selectedCommunity}}" >
         <h2 class="folder-header">Создать папку</h2>
     </router-link>
+    <router-link :to="{ name: 'StorageCreateUpdate', params: { selectedCommunity: user.selectedCommunity}}" >
+        <h2 class="folder-header">Создать Хранилище</h2>
+    </router-link>
 
-    <Storages/>
-    <Folders/>
+    <Storages :selectedCommunity="user.selectedCommunity"/>
+    <Folders :selectedCommunity="user.selectedCommunity" />
     
   </div>
 </template>
@@ -38,11 +41,8 @@ export default {
     }
   },
   methods:{
-    
-    
-  },
-  mounted(){
-    getUser().then(user=>{
+    loadPage(){
+      getUser().then(user=>{
         console.log(user)
         
         this.user = user
@@ -52,7 +52,12 @@ export default {
         this.request.refreshToken().then(response=>{
           console.log(response)
         })
-      })
+    })
+    }
+    
+  },
+  mounted(){
+    this.loadPage()
   }
 }
 </script>

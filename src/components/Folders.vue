@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <h1>{{ selectedCommunity }}</h1>
     <p>{{folders}}</p>
          <div class="folder-container">
          <div class="folder" v-for="(folder, index) in folders" :key="index">
@@ -12,13 +12,13 @@
                   </svg>
                 </a> -->
 
-                <button @click="dropdownShow =  !dropdownShow" class="dropdown" :class="{'show': dropdownShow}">
+                <button @click="openDropdown(index)" class="dropdown" :class="{'show': dropdownShow == index}">
                    <svg class="feather">
                     <use xlink:href="@/assets/feather-sprite.svg#more-horizontal"/>
                   </svg>
                 </button>
 
-                <div class="dropdown-menu dropdown-menu-right" :class="{'show': dropdownShow}" aria-labelledby="dropdownMenuLink">
+                <div class="dropdown-menu dropdown-menu-right" :class="{'show': dropdownShow == index}" aria-labelledby="dropdownMenuLink">
                   <!-- <button class="dropdown-item" @click="editFolder(index)">Редактировать</button> -->
                   <router-link :to="{ name: 'FoldersCreateUpdate', params: { folder: folder.folder}}" >
                       <h2 class="folder-header">Редактировать</h2>
@@ -61,7 +61,7 @@
 
 <script>
 // import Items from '../views/Items'
-import {getFolders} from '../requests/folders'
+import {getFolders, deleteFolder} from '../requests/folders'
 
 // import FoldersCreateUpdate from '../views/FolderCreateUpdate'
 
@@ -71,20 +71,64 @@ export default {
     // FoldersCreateUpdate
   },
   props: {
-    msg: String
+    selectedCommunity: Number
   },
   data(){
     return {
       folders: [],
-      dropdownShow: false,
+      dropdownShow: null,
       // { "folder": { "id": 1, "name": "Test Folder2", "image": "icon-all.png", "color": "yellow", "communityId": 1, "createdAt": "2021-01-26T10:14:02.000Z", "updatedAt": "2021-01-26T10:14:02.000Z" }, "itemCount": 6 }
     }
   },
-  mounted(){
-    getFolders().then(folders=>{
+  methods: {
+    loadPage(){
+      getFolders().then(folders=>{
+            console.log(folders)
+            this.dropdownShowA = []
+              folders.forEach(()=>{
+                this.dropdownShowA.push(false)
+              })
+            this.folders = folders
+          })
+    },
+    update(){
+      alert(`was updated ${this.selectedCommunity}`)
+    },
+    openDropdown(index){
+      console.log(index)
+      if(this.dropdownShow == null){
+        this.dropdownShow = index
+      }
+      else{
+       this.dropdownShow = null
+      }
+    },
+    deleteFolder(index){
+      console.log('deleteing: ', this.folders[index])
+      var result = confirm('⚠️This Folder will be deleted')
+      if(result){
+        deleteFolder(this.folders[index].folder.id).then(response=>{
+          console.log(response)
+          this.loadPage()
+        })
+      }
+    }
+  },
+  watch:{
+    selectedCommunity: function(old, nv){
+      console.log(`was updated ${this.selectedCommunity}, ${old}, ${nv}`)
+      getFolders().then(folders=>{
       console.log(folders)
+      this.dropdownShowA = []
+        folders.forEach(()=>{
+          this.dropdownShowA.push(false)
+        })
       this.folders = folders
     })
+    }
+  },
+  mounted(){
+    this.loadPage()
   }
 }
 </script>

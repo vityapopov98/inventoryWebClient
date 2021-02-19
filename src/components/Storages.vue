@@ -1,11 +1,11 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <!-- <h1>{{ msg }}</h1> -->
     <p>{{storages}}</p>
          <div class="folder-container">
          <div class="folder" v-for="(storage, index) in storages" :key="index">
 
-              <div class="dropdown show" v-if="storage.storage.name != 'Все вещи' && storage.storage.name != 'Корзина' && storage.storage.name != 'Given'">
+              <!-- <div class="dropdown show" v-if="storage.storage.name != 'Все вещи' && storage.storage.name != 'Корзина' && storage.storage.name != 'Given'">
                 <a class="" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <svg class="feather">
                     <use xlink:href="@/assets/feather-sprite.svg#more-horizontal"/>
@@ -15,6 +15,22 @@
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink">
                   <button class="dropdown-item" @click="editFolder(index)">Редактировать</button>
                   <button class="dropdown-item" @click="deleteFolder(index)">Удалить</button>
+                </div>
+              </div> -->
+              <div class="dropdown show" v-if="storage.storage.name != 'Все вещи' && storage.storage.name != 'Корзина' && storage.storage.name != 'Given'">
+                <button @click="openDropdown(index)" class="dropdown" :class="{'show': dropdownShow == index}">
+                   <svg class="feather">
+                    <use xlink:href="@/assets/feather-sprite.svg#more-horizontal"/>
+                  </svg>
+                </button>
+
+                <div class="dropdown-menu dropdown-menu-right" :class="{'show': dropdownShow == index}" aria-labelledby="dropdownMenuLink">
+                  <!-- <button class="dropdown-item" @click="editFolder(index)">Редактировать</button> -->
+                  <router-link :to="{ name: 'StorageCreateUpdate', params: { storage: storage.storage}}" >
+                      <h2 class="folder-header">Редактировать</h2>
+                  </router-link>
+                 
+                  <button class="dropdown-item" @click="deleteStorage(index)">Удалить</button>
                 </div>
               </div>
 
@@ -36,9 +52,9 @@
                  <img v-if="storage.storage.image != undefined" :src="require(`@/assets/${storage.storage.image}`)" alt="">
              </div>
 
-              <!-- <router-link :to="{ name: 'Items', params: { from: `-${folder.name}`}}" v-if="displayMode=='Storage'"> -->
+              <router-link :to="{ name: 'Items', params: { from: storage.storage, fromType: 'Storage' }}">
                 <h2 class="folder-header">{{storage.storage.name}}</h2>
-              <!-- </router-link> -->
+              </router-link>
 
               <!-- <router-link :to="{ name: 'Items', params: { from: folder.name}}" v-if="displayMode=='Folder'">
                 <h2 class="folder-header">{{folder.name}}</h2>
@@ -50,24 +66,62 @@
 </template>
 
 <script>
-import {getStorages} from '../requests/storages'
+import {getStorages, deleteStorage} from '../requests/storages'
 
 export default {
   name: 'Storages',
   props: {
-    msg: String
+    selectedCommunity: Number
   },
   data(){
     return {
       storages: [ ],
       // { "folder": { "id": 1, "name": "Test Folder2", "image": "icon-all.png", "color": "yellow", "communityId": 1, "createdAt": "2021-01-26T10:14:02.000Z", "updatedAt": "2021-01-26T10:14:02.000Z" }, "itemCount": 6 }
+      // innerState: this.selectedCommunity,
+      dropdownShow: null
+    }
+  },
+  methods: {
+    loadPage(){
+      getStorages().then(storages=>{
+        console.log(storages)
+        this.storages = storages
+      })
+    },
+    update(){
+      alert(`was updated ${this.selectedCommunity}`)
+    },
+    openDropdown(index){
+      console.log(index)
+      if(this.dropdownShow == null){
+        this.dropdownShow = index
+      }
+      else{
+       this.dropdownShow = null
+      }
+    },
+    deleteStorage(index){
+      console.log('deleteing: ', this.storages[index])
+      var result = confirm(`⚠️This Storage will be deleted ${this.storages[index].storage.id}`)
+      if(result){
+        deleteStorage(this.storages[index].storage.id).then(response=>{
+          console.log(response)
+          this.loadPage()
+        })
+      }
+    }
+  },
+   watch:{
+    selectedCommunity: function(old, nv){
+      console.log(`was updated ${this.selectedCommunity}, ${old}, ${nv}`)
+      getStorages().then(storages=>{
+        console.log(storages)
+        this.storages = storages
+      })
     }
   },
   mounted(){
-    getStorages().then(storages=>{
-      console.log(storages)
-      this.storages = storages
-    })
+    this.loadPage()
   }
 }
 </script>

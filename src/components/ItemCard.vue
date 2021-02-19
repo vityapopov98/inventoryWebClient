@@ -5,6 +5,9 @@
          <div class="card_img-container">
           <img :src="item.image" alt="" srcset="">
          </div>
+          <p>Фото: <input type="text" name="image" placeholder="Фото" v-model="item.image" :disabled="isDisabled">
+            <input type="file" name="file" id="file" class="circleButton item-card-header" @change="previewImage" accept="image/*"  :disabled="isDisabled">
+          </p>
          <input type="text" class="item-card-header" v-model="item.image" :disabled="isDisabled">
        </div>
 
@@ -35,7 +38,7 @@
               <p>Количество: <input type="text" v-model="item.count" :disabled="isDisabled"></p>
               <p>Хранилище:
                 <select class="form-select" aria-label="Default select example" @change="changeStorage($event)" v-if="userStorages != 0" :disabled="isDisabled">
-                  <option  
+                  <option :selected="item.storage.name == userStorage.storage.name"
                           :value="userStorage.storage.id" v-for="(userStorage) in userStorages" 
                           :key="userStorage.storage.id"> 
                               {{userStorage.storage.name}}
@@ -83,7 +86,8 @@
 
 <script>
 import CreateGiving from '../components/CreateGiving'
-import {updateItem} from '../requests/items'
+import {updateItem, deleteItem} from '../requests/items'
+import {previewUploadImage, deletePreviewImage} from '../requests/previewUploadImage'
 
 export default {
   name: 'ItemCard',
@@ -103,7 +107,7 @@ export default {
       isDisabled: true,
       cardEditBtnLabel: '',
       reloadItems:  '',
-      
+      file: ''
     }
   },
   methods: {
@@ -114,6 +118,12 @@ export default {
       }
       else{
         //редактирование закончено
+        var file = '.'+this.item.image.slice(21)
+        console.log('this is file ', file)
+        deletePreviewImage(file).then(response=>{
+          console.log(response)
+        })
+
         this.cardEditBtnLabel = '';
         this.isDisabled = true
         var data = {
@@ -142,12 +152,6 @@ export default {
           console.log(response)
           this.$emit('reloadCards')
         })
-        // this.requests.updateItemInformation(this.$root.item, this.$root.givingId).then(response=>{
-        //   //после того, как ответ пришел, испускаем событие, что бы повторно загрузить инфу о вещах
-        //   if(response){
-        //     this.$emit('reloadCards')
-        //   }
-        // })
       }
     },
     changeStorage(event){
@@ -165,13 +169,31 @@ export default {
       var result = confirm('⚠️This item will be deleted')
       if(result){
         console.log('red: ', this.fromPlace)
-        this.requests.deleteItem(this.item.id, this.fromPlace).then(response=>{
-          console.lo(response)
+        deleteItem(this.item.id).then(response=>{
+          console.log(response)
           this.$emit('reloadCards')
         })
       }
-      //испустить событие на обновление данных в виде Items.vue
-      
+    },
+    previewImage(event){
+      console.log(event.target.files[0])
+      this.file = event.target.files[0]
+
+
+      if(this.item.image != ''){
+        var file = '.'+this.item.image.slice(21)
+        console.log('this is file ', file)
+        deletePreviewImage(file).then(response=>{
+          console.log(response)
+        })
+      }
+
+      //Запрос на сервер для превью
+      var formData = new FormData()
+      formData.append('image', this.file)
+      previewUploadImage(formData).then(imagePreview=>{
+        this.item.image = imagePreview.image
+      })
     },
     returnItem(){
       var data = {

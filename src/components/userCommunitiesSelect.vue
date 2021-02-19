@@ -40,7 +40,7 @@ export default {
 
       updateUser(data).then(response=>{
         console.log('user upd', response)
-        this.$emit('userSelectedCommunityUpdated')
+        this.$emit('selectedCommunityUpdated')
       })
     }
   },

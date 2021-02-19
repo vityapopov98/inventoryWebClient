@@ -30,10 +30,10 @@ function updateStorage(data){
 }
 
 function deleteStorage(storageId){
-    console.log('DELETE /api/storages')
+    console.log(`DELETE /api/storages?storageId=${storageId}`)
     return sendRequest({
         method: 'DELETE', 
-        url: `/api/storages?folderId=${storageId}`,
+        url: `/api/storages?storageId=${storageId}`,
         token: localStorage.accessToken
     })
 }

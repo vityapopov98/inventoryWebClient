@@ -28,8 +28,17 @@ function updateItem(data){
     })
 }
 
+function deleteItem(itemId){
+    return sendRequest({
+        method: 'DELETE',
+        url: `/api/items?id=${itemId}`,
+        token: localStorage.accessToken
+    })
+}
+
 export {
     getItems,
     createItem,
-    updateItem
+    updateItem,
+    deleteItem
 }

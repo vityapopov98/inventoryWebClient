@@ -24,9 +24,9 @@
            <p>Количество: <input type="text" name="count" placeholder="count" v-model="itemInfo.count"></p>
            <!-- Сделать папку, хранилище селектами, комьюнити -->
            <select class="form-select" aria-label="Default select example" @change="changeStorage($event)" v-if="userStorages != 0">
-                <!-- :selected="userStorage.id == userStorage.id" -->
-                <option  
-                        :value="userStorage.storage.id" v-for="(userStorage) in userStorages" 
+                
+                <option :selected="userStorages[index] == 0"
+                        :value="userStorage.storage.id" v-for="(userStorage, index) in userStorages" 
                         :key="userStorage.storage.id"> 
                             {{userStorage.storage.name}}
                 </option>
@@ -35,8 +35,8 @@
            <p>Хранилище: <input type="text" name="storage" placeholder="storage" v-model="itemInfo.storageId"></p>
            <select class="form-select" aria-label="Default select example" @change="changeFolder($event)" v-if="userFolders != 0">
                 <!-- :selected="userStorage.id == userStorage.id" -->
-                <option  
-                        :value="userFolder.folder.id" v-for="(userFolder) in userFolders" 
+                <option  :selected="userFolders[index] == 0"
+                        :value="userFolder.folder.id" v-for="(userFolder, index) in userFolders" 
                         :key="userFolder.folder.id"> 
                             {{userFolder.folder.name}}
                 </option>
@@ -55,15 +55,16 @@
 
 <script>
 // import Upload from '../components/Upload.vue'
-import {getFolders} from '../requests/folders'
-import {getStorages} from '../requests/storages'
+import {previewUploadImage, deletePreviewImage} from '../requests/previewUploadImage'
 import {createItem} from '../requests/items'
 
 export default {
   name: 'CreateItem',
   props: {
     from: {},
-    fromType: String
+    fromType: String,
+    userStorages: Array,
+    userFolders: Array
   },
   components: {
     // Upload
@@ -82,8 +83,8 @@ export default {
             folderId: '',
             communityId: ''
       },
-      userStorages: [],
-      userFolders: [],
+      // userStorages: [],
+      // userFolders: [],
       communityId: this.from.communityId,
       isLoad: false,
       file: Object
@@ -91,35 +92,58 @@ export default {
   },
   methods:{
     createItem(){ 
-      var data = {
-        name: this.itemInfo.name,
-        description: this.itemInfo.description,
-        purchaseDate: this.itemInfo.purchaseDate,
-        guarantee: this.itemInfo.guarantee,
-        cost: this.itemInfo.cost,
-        count: this.itemInfo.count,
-        storageId: this.itemInfo.storageId,
-        folderId: this.itemInfo.folderId,
-        communityId: this.communityId
-      }
-      var formData = new FormData()
-      console.log(data)
-      for (const key in data) {
-        if (data.hasOwnProperty.call(data, key)) {
-          const element = data[key];
-          formData.append(key, element)
-        }
-      }
-      formData.append('image', this.file)
-      console.log(formData.get('name'))
-      createItem(formData).then(response=>{
+      //Удалить превью
+      var file = '.'+this.itemInfo.image.slice(21)
+      console.log('this is file ', file)
+      deletePreviewImage(file).then(response=>{
         console.log(response)
-        this.$emit('reloadCards')
+      
+        var data = {
+          name: this.itemInfo.name,
+          description: this.itemInfo.description,
+          purchaseDate: this.itemInfo.purchaseDate,
+          guarantee: this.itemInfo.guarantee,
+          cost: this.itemInfo.cost,
+          count: this.itemInfo.count,
+          storageId: this.itemInfo.storageId,
+          folderId: this.itemInfo.folderId,
+          communityId: this.communityId
+        }
+        var formData = new FormData()
+        console.log(data)
+        for (const key in data) {
+          if (data.hasOwnProperty.call(data, key)) {
+            const element = data[key];
+            formData.append(key, element)
+          }
+        }
+        formData.append('image', this.file)
+        console.log(formData.get('name'))
+        createItem(formData).then(response=>{
+          console.log(response)
+          this.$emit('reloadCards')
+        })
       })
     },
     previewImage(event){
       console.log(event.target.files[0])
       this.file = event.target.files[0]
+
+
+      if(this.itemInfo.image != ''){
+        var file = '.'+this.itemInfo.image.slice(21)
+        console.log('this is file ', file)
+        deletePreviewImage(file).then(response=>{
+          console.log(response)
+        })
+      }
+
+      //Запрос на сервер для превью
+      var formData = new FormData()
+      formData.append('image', this.file)
+      previewUploadImage(formData).then(imagePreview=>{
+        this.itemInfo.image = imagePreview.image
+      })
     },
     changeStorage(event){
        console.log('StorageId', event.target.options[event.target.options.selectedIndex].value)
@@ -131,25 +155,27 @@ export default {
     }
   },
   mounted(){
-    if(this.fromType=='Folder'){
-      console.log('loading items from folder', this.from)
-      this.itemInfo.folderId = this.from.id
-      //Fetch storages
-      getStorages().then(storages=>{
-        console.log(storages)
-        this.userStorages = storages
-        this.itemInfo.storageId = storages[0].storage.id
-      })
-    }
-    else if(this.fromType=='Storage'){
-      console.log('loading items from storage', this.from)
-      this.itemInfo.storageId = this.from.id
-      //fetch folder
-      getFolders().then(folders=>{
-        console.log(folders)
-        this.userFolders = folders
-      })
-    }
+    this.itemInfo.storageId = this.userStorages[0].storage.id
+    this.itemInfo.folderId = this.userFolders[0].folder.id
+    // if(this.fromType=='Folder'){
+    //   console.log('loading items from folder', this.from)
+    //   this.itemInfo.folderId = this.from.id
+    //   //Fetch storages
+    //   getStorages().then(storages=>{
+    //     console.log(storages)
+    //     this.userStorages = storages
+    //     this.itemInfo.storageId = storages[0].storage.id
+    //   })
+    // }
+    // else if(this.fromType=='Storage'){
+    //   console.log('loading items from storage', this.from)
+    //   this.itemInfo.storageId = this.from.id
+    //   //fetch folder
+    //   getFolders().then(folders=>{
+    //     console.log(folders)
+    //     this.userFolders = folders
+    //   })
+    // }
   }
 }
 </script>
